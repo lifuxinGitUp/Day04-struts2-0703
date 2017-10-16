@@ -1,0 +1,30 @@
+一. 文件上传
+    * 表单的提交方式必须是post且form表单中必须加一个enctype="multipart/form-data"属性;
+    * 表单里面文件标签为<input type="file" name="XXX">;
+    * 动作类中定义File类型的成员变量,变量名与表单提交的name属性名一致,同时还需要对应的get/set方法;
+    * 动作类中定义获得上传文件名称的属性XXXFileName, 其中XXX指的是表单中的name属性; 同时提供get/set方法;
+    * 动作类中定义获得上传文件的MIME类型的属性XXXContentType,其中XXX指的是表单中的name属性,同时提供get/set方法;(可选)
+    * 在动作方法中将表单提交的file保存到本地目录:
+        * 通过ServletActionContext.getServletContext().getRealPath("files")获得项目的files文件夹所在的真正的路径,该路径
+          对应的是一个目录,在out/artifacts/项目_war_exploded.files目录下;
+        * 利用目标路径 + XXXFileName构建目标路径,例如 File file = new File("目标路径",XXXFileName);
+        * 利用FileUtils.copy(srcFile,destFile)保存文件;
+    * 需要注意的几个配置:
+        * 上传文件的大小限制: maximumSize(重写fileupload拦截器中的大小限制属性)或struts.multipart.maxSize(struts标签中的constant常量设置);
+        * 上传文件的扩展名:allowedExtensions(重写fileUpload拦截器中的扩展名属性,多个用逗号隔开);
+        * 上传文件的MIME类型:allowedType(重写fileUpload拦截器中的MIME类型属性,多个用逗号隔开);
+二. 文件下载
+    * 在动作类里面第一要提供下载的InputStream流对象,该属性要提供get/set方法;
+    * 在动作方法中初始化inputStream对象:
+        * 通过ServletActionContext.getServletContext()>getRealPath("files")获得要下载的文件所对应的文件目录字符串;
+        * 创建File对象,即要提供下载的文件对象,例如: File file = new File("文件目录","文件名称");
+        * 构建输入流对象,例如inputStream = new FileInputStream(file);
+        * 如果文件名包含中文,需要调用filenameEncoding方法对文件名做一下处理;
+    * 在struts.xml中配置action对象:
+        * result中的type需要变成流对象;例如: <result name="success" type="stream">
+        * 在Result标签中定义<param>子标签,用于重写下载的参数配置:
+            * inputName: 下载动作类中的输入流的属性名:<param name="inputName">XXX<param>,其中xxx与动作类属性名一致;
+            * contentDisposition: 配置浏览器以何种形式下载文件:<param name="contentDisposition">attachment;filename=${fileName}</param>
+               * 其中${fileName}可以写死,也可以用EL表达式动态取传过来的参数
+        * 指定下载的文件的MIME类型
+            * 例如: <param name="contentType">application/octet-stream</param>
